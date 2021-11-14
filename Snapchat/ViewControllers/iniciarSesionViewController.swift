@@ -36,35 +36,34 @@ class iniciarSesionViewController: UIViewController {
         Auth.auth().signIn(withEmail: emailTextField.text!, password: passwordtextField.text!) {(user, error) in
             print("Intentando iniciar Sesion")
             if error != nil{
+                
+                
                 print("Se presento el siguiente error \(error)")
-                Auth.auth().createUser(withEmail: self.emailTextField.text!, password: self.passwordtextField.text!, completion: {(user, error) in
-                    print("Intentando crear un usuario")
-                    
-                    if error != nil {
-                        print("Se presento el presente error al crear el usuario\( error)")
-                    }else {
-                        print("el usuario fue creado exitosamente")
-                        
-                         Database.database().reference ().child("usuarios").child(user!.user.uid).child ("email").setValue (user!.user.email)
-                        
-                         
-                        let alerta = UIAlertController(title: "Creacion de Usuario", message:
-                            "Usuario: \(self.emailTextField.text!) se creo correct amente.",
-                            preferredStyle: .alert)
-                        let btn0K = UIAlertAction (title: "Aceptar", style: .default, handler:
-                            { (UIAlertAction) in
-                                self.performSegue (withIdentifier: "iniciarsesionsegue", sender: nil)
-                        })
-                        alerta.addAction (btn0K)
-                        self.present (alerta, animated: true, completion: nil)
-                    }
-                })
+               let alerta = UIAlertController(title: "Creacion de Usuario", message:
+                        "Usuario: \(self.emailTextField.text!) se creo correct amente.",preferredStyle:.alert)
+                
+                let crearusuario = UIAlertAction (title: "Crear Usuario", style: .default, handler:{ (UIAlertAction) in
+                self.performSegue (withIdentifier: "crearusuariosegue", sender: nil)})
+                
+                let cancelar = UIAlertAction (title: "Cancelar", style: .cancel, handler:{ (UIAlertAction) in
+                    print("el registro fue cancelado")})
+                
+                alerta.addAction(crearusuario)
+                alerta.addAction(cancelar)
+                self.present (alerta, animated: true, completion: nil)
+                
                 
             }else{
                 print("Inicio Sesion Exitoso")
                 self.performSegue(withIdentifier: "iniciarsesionsegue", sender: nil)
             }
         }
+    }
+    
+    
+    @IBAction func crearusuarioButton(_ sender: Any) {
+        
+        self.performSegue (withIdentifier: "crearusuariosegue", sender: nil)
     }
     
 }

@@ -13,6 +13,7 @@ class ImagenViewController: UIViewController,UIImagePickerControllerDelegate, UI
 
     //Variables
     var imagePicker = UIImagePickerController()
+    var imagenID = NSUUID().uuidString
     
     
     @IBOutlet weak var imageView: UIImageView!
@@ -30,37 +31,58 @@ class ImagenViewController: UIViewController,UIImagePickerControllerDelegate, UI
 
     @IBAction func elegirContactoTapped(_ sender: UIButton) {
         self.elegirContactoBoton.isEnabled = false
-        let imagenesFolder = Storage.storage().reference().child("imagenes")
-        let imagenData = imageView.image?.jpegData(compressionQuality: 0.50)
-        let cargarImagen = imagenesFolder.child("\(NSUUID().uuidString).jpg").putData(imagenData!, metadata: nil) { (metadata, error) in
-             if error != nil {
-                   self.mostrarAlerta(titulo: "Error", mensaje: "Se produjo un error al subir la imagen. Verifique su conexion a internety vuelva a intentarlo.", accion: "Aceptar")
-                    self.elegirContactoBoton.isEnabled = true
-                          print ("Ocurrio un error al subir imagen: \(error) ")
-             }else{
-                self.performSegue (withIdentifier:"seleccionarContactoSegue",
-                          sender: nil )
-            }
-        }
-        let alertaCarga = UIAlertController(title: "Cargando Imagen ...", message: "0%",preferredStyle: .alert)
-             let progresoCarga : UIProgressView = UIProgressView(progressViewStyle: .default)
-             cargarImagen.observe(.progress) { (snapshot) in
-                 let porcentaje = Double(snapshot.progress!.completedUnitCount)
-                     / Double(snapshot.progress!.totalUnitCount)
-                 print(porcentaje)
-                 
-                 progresoCarga.setProgress (Float (porcentaje), animated: true)
-                 progresoCarga.frame = CGRect(x: 10, y: 70, width: 250, height: 0)
-                 alertaCarga.message = String(round (porcentaje*100.0)) + " %"
-                 if porcentaje>=1.0 {
-                     alertaCarga.dismiss(animated: true, completion: nil)
-                 }
+             let imagenesFolder = Storage.storage().reference().child("imagenes")
+             let imagenData = imageView.image?.jpegData(compressionQuality: 0.50)
+             let cargarImagen = imagenesFolder.child("\(imagenID).jpg")
+                cargarImagen.putData(imagenData!, metadata: nil) { (metadata, error) in
+                  if error != nil {
+                    
+                        self.mostrarAlerta(titulo: "Error", mensaje: "Se produjo un error al subir la imagen. Verifique su conexion a internety vuelva a intentarlo.", accion: "Aceptar")
+                         self.elegirContactoBoton.isEnabled = true
+                         print ("Ocurrio un error al subir imagen: \(error) ")
+                        return
+                    
+                    
+                  }else{
+                    cargarImagen.downloadURL(completion: {(url, error)
+                        
+                        in guard let enlaceURL = url else{
+                        self.mostrarAlerta(titulo: "Error", mensaje: "Se produjo un error al obtener la imformacion de imagen", accion: "Cancelar")
+                            self.elegirContactoBoton.isEnabled = true
+                            print("Ocurrio un error al obtener informacion de imagen \(error)")
+                            
+                            return
+                        }
+                        
+                        self.performSegue (withIdentifier:"seleccionarContactoSegue",
+                                           sender: url?.absoluteString )
+
+                    })
+                }
              }
-             let btn0K = UIAlertAction (title: "Aceptar", style: .default, handler: nil)
-             alertaCarga.addAction (btn0K)
-             alertaCarga.view.addSubview(progresoCarga)
-             present (alertaCarga, animated: true, completion: nil)
         
+        /*
+        
+             let alertaCarga = UIAlertController(title: "Cargando Imagen ...", message: "0%",preferredStyle: .alert)
+                  let progresoCarga : UIProgressView = UIProgressView(progressViewStyle: .default)
+                  cargarImagen.observe(.progress) { (snapshot) in
+                      let porcentaje = Double(snapshot.progress!.completedUnitCount)
+                          / Double(snapshot.progress!.totalUnitCount)
+                      print(porcentaje)
+                      
+                      progresoCarga.setProgress (Float (porcentaje), animated: true)
+                      progresoCarga.frame = CGRect(x: 10, y: 70, width: 250, height: 0)
+                      alertaCarga.message = String(round (porcentaje*100.0)) + " %"
+                      if porcentaje>=1.0 {
+                          alertaCarga.dismiss(animated: true, completion: nil)
+                      }
+                  }
+                  let btn0K = UIAlertAction (title: "Aceptar", style: .default, handler: nil)
+                  alertaCarga.addAction (btn0K)
+                  alertaCarga.view.addSubview(progresoCarga)
+                  present (alertaCarga, animated: true, completion: nil)
+    
+ */
     }
     
     @IBAction func camaraTapped(_ sender: Any) {
@@ -91,14 +113,10 @@ class ImagenViewController: UIViewController,UIImagePickerControllerDelegate, UI
     
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        let imagenesFolder = Storage.storage().reference().child("imagenes")
-        let imagenData = imageView.image?.jpegData(compressionQuality: 0.50)
-        imagenesFolder.child("imagenes.jpg").putData(imagenData!, metadata: nil){
-            (metadata, error) in
-            if error != nil{
-                print("Ocurrio un error al subir la imagen \(error) ")
-            }
-        }
+        let siguienteVC = segue.destination as! ElegirUsuarioViewController
+        siguienteVC.imagenURL = sender as! String
+        siguienteVC.descrip = descripcionTextField.text!
+        siguienteVC.imagenID = imagenID
     
     }
       
